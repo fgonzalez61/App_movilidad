@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoveFix — Formulario de Reservas</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1628; --navy-mid: #132040; --navy-light: #1E3460;
+    --yellow: #F5C400; --white: #F8F9FC; --gray: #8494A8;
+    --card-bg: #15264A; --border: rgba(255,255,255,0.07);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background-color: var(--navy); color: var(--white); }
+  nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(11,22,40,0.85); border-bottom: 1px solid var(--border); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+  .nav-tabs { display: flex; gap: 5px; }
+  .nav-tab { padding: 0 1rem; height: 64px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: var(--gray); text-decoration: none; border-bottom: 2px solid transparent; }
+  .nav-tab:hover, .nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+  .page-wrap { max-width: 600px; margin: 3rem auto; padding: 0 1.5rem; }
+  .form-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; }
+  .form-title { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin-bottom: 1.5rem; text-align: center; }
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 1.2rem; }
+  .field label { font-size: 0.75rem; font-weight: 600; color: var(--gray); text-transform: uppercase; }
+  .field input, .field select { background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; padding: 11px; color: var(--white); outline: none; font-family: 'DM Sans', sans-serif; }
+  .field select option { background: var(--navy-mid); }
+  .submit-btn { width: 100%; padding: 13px; background: var(--yellow); color: var(--navy); font-family: 'Syne', sans-serif; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; font-size: 1rem; transition: all .2s; }
+  .submit-btn:hover { transform: translateY(-1px); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">Move<span>Fix</span></div>
+  <div class="nav-tabs">
+    <a href="dashboard.html" class="nav-tab">Dashboard</a>
+    <a href="inventario.html" class="nav-tab">Inventario</a>
+    <a href="perfil.html" class="nav-tab">Perfil</a>
+    <a href="configuracion.html" class="nav-tab">Configuración</a>
+    <a href="calendario.html" class="nav-tab">Calendario</a>
+    <a href="reservas.html" class="nav-tab active">Reservas</a>
+    <a href="historial.html" class="nav-tab">Historial</a>
+    <a href="catalogo.html" class="nav-tab">Catálogo</a>
+  </div>
+</nav>
+<div class="page-wrap">
+  <div class="form-card">
+    <h2 class="form-title">Reserva de Unidades</h2>
+    <div class="field"><label>Línea / Colectivo Solicitante</label><input type="text" id="resLinea" placeholder="Ej: 203, 60..."></div>
+    <div class="field"><label>Fecha Requerida</label><input type="date" id="resFecha"></div>
+    <div class="field">
+      <label>Motivo de Reserva</label>
+      <select id="resMotivo">
+        <option value="">Selecciona una opción</option>
+        <option>Refuerzo de servicio por alta demanda</option>
+        <option>Ingreso programado a reparaciones en taller</option>
+        <option>Evento especial / Chárter habilitado</option>
+      </select>
+    </div>
+    <button class="submit-btn" onclick="saveReserva()">Confirmar Reserva →</button>
+  </div>
+</div>
+<script>
+  function saveReserva() {
+    const linea = document.getElementById('resLinea').value.trim();
+    const fecha = document.getElementById('resFecha').value;
+    const motivo = document.getElementById('resMotivo').value;
+    if(!linea || !fecha || !motivo) return alert('Por favor, completa todos los campos.');
+
+    let reservas = JSON.parse(localStorage.getItem('mf_reservas') || '[]');
+    reservas.push({ id: Date.now(), linea, fecha, motivo });
+    localStorage.setItem('mf_reservas', JSON.stringify(reservas));
+
+    logMovement(`Nueva reserva creada para Línea ${linea}`);
+    alert('✅ Reserva registrada con éxito.');
+    window.location.href = 'dashboard.html';
+  }
+  function logMovement(action) {
+    let hist = JSON.parse(localStorage.getItem('mf_historial') || '[]');
+    hist.unshift({ id: Date.now(), action, user: 'Facundo González', time: new Date().toLocaleString('es-AR') });
+    localStorage.setItem('mf_historial', JSON.stringify(hist));
+  }
+</script>
+</body>
+</html>

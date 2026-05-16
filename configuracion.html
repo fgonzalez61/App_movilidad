@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoveFix — Configuración</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1628; --navy-mid: #132040; --navy-light: #1E3460;
+    --yellow: #F5C400; --white: #F8F9FC; --gray: #8494A8;
+    --card-bg: #15264A; --border: rgba(255,255,255,0.07); --red: #E84040;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background-color: var(--navy); color: var(--white); }
+  nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(11,22,40,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+  .nav-tabs { display: flex; gap: 5px; }
+  .nav-tab { padding: 0 1rem; height: 64px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: var(--gray); text-decoration: none; border-bottom: 2px solid transparent; }
+  .nav-tab:hover, .nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+  .page-wrap { max-width: 700px; margin: 3rem auto; padding: 0 1.5rem; }
+  .config-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 2rem; margin-bottom: 1.5rem; }
+  .config-title { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+  .option-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .option-info h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+  .option-info p { font-size: 0.8rem; color: var(--gray); }
+  .reset-btn { background: rgba(232,64,64,0.15); border: 1px solid var(--red); color: var(--red); padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: .85rem; cursor: pointer; transition: all .2s; }
+  .reset-btn:hover { background: var(--red); color: #fff; }
+  select { background: var(--navy-light); color: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; outline: none; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">Move<span>Fix</span></div>
+  <div class="nav-tabs">
+    <a href="dashboard.html" class="nav-tab">Dashboard</a>
+    <a href="inventario.html" class="nav-tab">Inventario</a>
+    <a href="perfil.html" class="nav-tab">Perfil</a>
+    <a href="configuracion.html" class="nav-tab active">Configuración</a>
+    <a href="calendario.html" class="nav-tab">Calendario</a>
+    <a href="reservas.html" class="nav-tab">Reservas</a>
+    <a href="historial.html" class="nav-tab">Historial</a>
+    <a href="catalogo.html" class="nav-tab">Catálogo</a>
+  </div>
+</nav>
+<div class="page-wrap">
+  <div class="config-card">
+    <h3 class="config-title">⚙️ Parámetros del Sistema</h3>
+    <div class="option-row">
+      <div class="option-info"><h4>Modo Simulación Persistente</h4><p>Mantiene el almacenamiento local habilitado en el navegador.</p></div>
+      <select><option>Habilitado</option><option>Deshabilitado</option></select>
+    </div>
+    <div class="option-row">
+      <div class="option-info"><h4>Frecuencia de Actualización Muestral</h4><p>Intervalo en segundos para refresco de métricas visuales.</p></div>
+      <select><option>Cada 5 seg</option><option>Cada 30 seg</option><option>Manual</option></select>
+    </div>
+  </div>
+  <div class="config-card">
+    <h3 class="config-title" style="color: var(--red)">Mantenimiento Crítico</h3>
+    <div class="option-row">
+      <div class="option-info"><h4>Limpiar Base de Datos (LocalStorage)</h4><p>Elimina todos los datos de reservas, stock e historial de inmediato.</p></div>
+      <button class="reset-btn" onclick="clearAllData()">Restablecer Todo</button>
+    </div>
+  </div>
+</div>
+<script>
+  function clearAllData() {
+    if(confirm('¿Seguro que querés vaciar todo el localStorage de la simulación?')) {
+      localStorage.clear();
+      alert('Datos borrados exitosamente.');
+      window.location.href = 'dashboard.html';
+    }
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoveFix — Dashboard de Métricas</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0B1628; --navy-mid: #132040; --navy-light: #1E3460;
+    --yellow: #F5C400; --white: #F8F9FC; --gray: #8494A8;
+    --red: #E84040; --green: #1EC97E; --blue-accent: #3A7BF7;
+    --card-bg: #15264A; --border: rgba(255,255,255,0.07);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background-color: var(--navy); color: var(--white); min-height: 100vh; }
+  nav { position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; height: 64px; background: rgba(11,22,40,0.85); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); }
+  .nav-logo { display: flex; align-items: center; gap: 10px; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+  .nav-logo span { color: var(--yellow); }
+  .nav-tabs { display: flex; gap: 5px; overflow-x: auto; }
+  .nav-tab { padding: 0 1rem; height: 64px; display: flex; align-items: center; font-size: 0.85rem; font-weight: 500; color: var(--gray); text-decoration: none; border-bottom: 2px solid transparent; transition: all .2s; }
+  .nav-tab:hover, .nav-tab.active { color: var(--yellow); border-bottom-color: var(--yellow); }
+  .page-wrap { max-width: 1100px; margin: 0 auto; padding: 2.5rem 2rem 4rem; }
+  .section-heading { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: .3rem; }
+  .section-sub { font-size: 0.88rem; color: var(--gray); margin-bottom: 2rem; }
+  .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; margin-bottom: 2.5rem; }
+  .panel-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem 1.6rem; }
+  .pc-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+  .pc-label { font-size: 0.78rem; color: var(--gray); text-transform: uppercase; letter-spacing: 1px; }
+  .pc-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-top: 5px; }
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .chart-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; }
+  .chart-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; margin-bottom: 1.2rem; }
+  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: .7rem; font-size: 0.8rem; }
+  .bar-label { min-width: 100px; color: var(--gray); }
+  .bar-track { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .bar-count { min-width: 24px; text-align: right; color: var(--white); font-weight: 500; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-logo">Move<span>Fix</span></div>
+  <div class="nav-tabs">
+    <a href="dashboard.html" class="nav-tab active">Dashboard</a>
+    <a href="inventario.html" class="nav-tab">Inventario</a>
+    <a href="perfil.html" class="nav-tab">Perfil</a>
+    <a href="configuracion.html" class="nav-tab">Configuración</a>
+    <a href="calendario.html" class="nav-tab">Calendario</a>
+    <a href="reservas.html" class="nav-tab">Reservas</a>
+    <a href="historial.html" class="nav-tab">Historial</a>
+    <a href="catalogo.html" class="nav-tab">Catálogo</a>
+  </div>
+</nav>
+<div class="page-wrap">
+  <h2 class="section-heading">Dashboard de Métricas</h2>
+  <p class="section-sub">Información unificada en tiempo real de la infraestructura urbana.</p>
+  <div class="panel-grid" id="metricsGrid"></div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-title">📊 Distribución Operativa de Colectivos</div>
+      <div id="chartDistribucion"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">⚡ Criticidad de Requerimientos</div>
+      <div id="chartPrioridades"></div>
+    </div>
+  </div>
+</div>
+<script>
+  function loadData() {
+    const stock = JSON.parse(localStorage.getItem('mf_inventario') || '[]');
+    const res = JSON.parse(localStorage.getItem('mf_reservas') || '[]');
+    const totalItems = stock.reduce((acc, item) => acc + parseInt(item.cantidad || 0), 0);
+
+    document.getElementById('metricsGrid').innerHTML = `
+      <div class="panel-card"><div class="pc-icon">📦</div><div class="pc-label">Stock Total Repuestos</div><div class="pc-value" style="color:var(--yellow)">${totalItems} u</div></div>
+      <div class="panel-card"><div class="pc-icon">📅</div><div class="pc-label">Reservas registradas</div><div class="pc-value" style="color:var(--blue-accent)">${res.length}</div></div>
+      <div class="panel-card"><div class="pc-icon">🟢</div><div class="pc-label">Eficiencia Operativa</div><div class="pc-value" style="color:var(--green)">94.2%</div></div>
+    `;
+
+    renderBars();
+  }
+
+  function renderBars() {
+    const distData = [['En Línea', 45], ['En Taller', 8], ['Reserva', 12]];
+    const maxDist = 45;
+    document.getElementById('chartDistribucion').innerHTML = distData.map(([label, count]) => `
+      <div class="bar-row">
+        <span class="bar-label">${label}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${(count/maxDist)*100}%;background:var(--blue-accent)"></div></div>
+        <span class="bar-count">${count}</span>
+      </div>
+    `).join('');
+
+    const prioData = [['Alta', 14], ['Media', 32], ['Baja', 9]];
+    document.getElementById('chartPrioridades').innerHTML = prioData.map(([label, count]) => `
+      <div class="bar-row">
+        <span class="bar-label">${label}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${(count/32)*100}%;background:var(--red)"></div></div>
+        <span class="bar-count">${count}</span>
+      </div>
+    `).join('');
+  }
+  window.onload = loadData;
+</script>
+</body>
+</html>
