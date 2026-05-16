@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial · StockApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+  @media(max-width:640px){.resumen{grid-template-columns:1fr}}
+  .r-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem}
+  .r-label{font-size:.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem}
+  .r-value{font-family:'Syne',sans-serif;font-weight:800;font-size:1.9rem}
+  .r-value.in{color:var(--green)} .r-value.out{color:var(--red)}
+
+  .timeline{position:relative}
+  .timeline::before{content:'';position:absolute;left:18px;top:0;bottom:0;width:2px;background:var(--border)}
+  .mov{
+    position:relative;padding:1rem 1rem 1rem 3.2rem;
+    background:var(--card);border:1px solid var(--border);border-radius:12px;
+    margin-bottom:.7rem; transition:border-color .2s;
+  }
+  .mov:hover{border-color:rgba(245,196,0,.2)}
+  .mov::before{
+    content:'';position:absolute;left:8px;top:50%;transform:translateY(-50%);
+    width:22px;height:22px;border-radius:50%;background:var(--navy);
+    border:3px solid var(--gray);
+  }
+  .mov.ingreso::before{border-color:var(--green)}
+  .mov.egreso::before{border-color:var(--red)}
+  .mov-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem;margin-bottom:.3rem}
+  .mov-titulo{font-family:'Syne',sans-serif;font-weight:700;font-size:1rem}
+  .mov-cant{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem}
+  .mov-cant.in{color:var(--green)} .mov-cant.out{color:var(--red)}
+  .mov-meta{font-size:.78rem;color:var(--gray);display:flex;gap:.8rem;flex-wrap:wrap}
+  .mov-meta .pill{background:rgba(255,255,255,.05);padding:2px 9px;border-radius:20px}
+
+  .head-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <div class="brand">Stock<span>App</span></div>
+  <div class="tabs">
+    <a href="inventario.html">Inventario</a>
+    <a href="catalogo.html">Catálogo</a>
+    <a href="perfil.html">Ficha</a>
+    <a href="historial.html" class="active">Historial</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="head-row">
+    <div>
+      <h1 class="page-title">Historial de movimientos</h1>
+      <p class="page-sub">Cronología completa de ingresos y egresos del depósito.</p>
+    </div>
+    <button class="btn btn-danger" id="btnLimpiar">Limpiar historial</button>
+  </div>
+
+  <div class="resumen" id="resumen"></div>
+
+  <div class="filters">
+    <select id="fProd"><option value="">Todos los productos</option></select>
+    <select id="fTipo">
+      <option value="">Todos los tipos</option>
+      <option value="ingreso">Solo ingresos</option>
+      <option value="egreso">Solo egresos</option>
+    </select>
+  </div>
+
+  <div class="timeline" id="timeline"></div>
+  <div id="empty" class="empty" style="display:none">
+    <div class="emoji">📜</div><h3>Sin movimientos</h3><p>Cargá un ingreso o egreso desde la ficha del producto.</p>
+  </div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+function nombreProd(id){
+  const p = DB.productos().find(x=>x.id===id);
+  return p ? `${p.codigo} — ${p.nombre}` : 'Producto eliminado';
+}
+
+function render(){
+  const movs = DB.movimientos();
+  const totalIn = movs.filter(m=>m.tipo==='ingreso').reduce((a,m)=>a+m.cantidad,0);
+  const totalOut = movs.filter(m=>m.tipo==='egreso').reduce((a,m)=>a+m.cantidad,0);
+  document.getElementById('resumen').innerHTML = `
+    <div class="r-card"><div class="r-label">Movimientos totales</div><div class="r-value">${movs.length}</div></div>
+    <div class="r-card"><div class="r-label">Unidades ingresadas</div><div class="r-value in">+${totalIn}</div></div>
+    <div class="r-card"><div class="r-label">Unidades egresadas</div><div class="r-value out">−${totalOut}</div></div>
+  `;
+  const fProd = document.getElementById('fProd');
+  const sel = fProd.value;
+  fProd.innerHTML = '<option value="">Todos los productos</option>' +
+    DB.productos().map(p=>`<option value="${p.id}" ${String(p.id)===sel?'selected':''}>${p.codigo} — ${p.nombre}</option>`).join('');
+  filtrar();
+}
+
+function filtrar(){
+  const prod = document.getElementById('fProd').value;
+  const tipo = document.getElementById('fTipo').value;
+  let lista = DB.movimientos().filter(m=>{
+    if (prod && String(m.productoId)!==prod) return false;
+    if (tipo && m.tipo!==tipo) return false;
+    return true;
+  });
+  document.getElementById('empty').style.display = lista.length ? 'none':'block';
+  document.getElementById('timeline').innerHTML = lista.map(m=>{
+    const sign = m.tipo==='ingreso' ? '+' : '−';
+    const cls = m.tipo==='ingreso' ? 'in' : 'out';
+    return `<div class="mov ${m.tipo}">
+      <div class="mov-top">
+        <div class="mov-titulo">${nombreProd(m.productoId)}</div>
+        <div class="mov-cant ${cls}">${sign}${m.cantidad} u.</div>
+      </div>
+      <div class="mov-meta">
+        <span class="pill">${m.tipo === 'ingreso' ? '⬆ Ingreso' : '⬇ Egreso'}</span>
+        <span>${m.motivo || '—'}</span>
+        <span>🕒 ${fmtFecha(m.fecha)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('btnLimpiar').onclick = ()=>{
+  if (!confirm('¿Borrar todo el historial de movimientos?')) return;
+  DB.guardarMovimientos([]);
+  toast('Historial limpiado');
+  render();
+};
+['fProd','fTipo'].forEach(i=>document.getElementById(i).addEventListener('change', filtrar));
+
+render();
+</script>
+</body>
+</html>

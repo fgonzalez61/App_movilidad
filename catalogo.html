@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo · StockApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1.2rem}
+  .g-card{
+    background:var(--card);border:1px solid var(--border);border-radius:16px;
+    overflow:hidden;cursor:pointer;
+    transition:transform .25s, border-color .25s, box-shadow .25s;
+    position:relative;
+  }
+  .g-card:hover{transform:translateY(-5px);border-color:rgba(245,196,0,.3);box-shadow:0 12px 28px rgba(0,0,0,.3)}
+  .g-img{
+    height:160px;display:flex;align-items:center;justify-content:center;
+    font-size:5rem;
+    background:linear-gradient(135deg, rgba(245,196,0,.08), rgba(58,123,247,.08));
+    border-bottom:1px solid var(--border);
+  }
+  .g-body{padding:1rem 1.2rem 1.2rem}
+  .g-cat{font-size:.7rem;color:var(--yellow);letter-spacing:1px;text-transform:uppercase;font-weight:600;margin-bottom:.3rem}
+  .g-name{font-family:'Syne',sans-serif;font-weight:700;font-size:1.05rem;line-height:1.25;margin-bottom:.5rem}
+  .g-desc{font-size:.82rem;color:var(--gray);line-height:1.45;height:36px;overflow:hidden;margin-bottom:.7rem}
+  .g-foot{display:flex;justify-content:space-between;align-items:center}
+  .g-precio{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--white)}
+  .g-pill{font-size:.7rem;padding:3px 10px;border-radius:20px;font-weight:600}
+  .g-stock-tag{position:absolute;top:.8rem;right:.8rem;padding:4px 10px;border-radius:20px;font-size:.7rem;font-weight:600;backdrop-filter:blur(8px);background:rgba(11,22,40,.7)}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <div class="brand">Stock<span>App</span></div>
+  <div class="tabs">
+    <a href="inventario.html">Inventario</a>
+    <a href="catalogo.html" class="active">Catálogo</a>
+    <a href="perfil.html">Ficha</a>
+    <a href="historial.html">Historial</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <h1 class="page-title">Galería de exploración</h1>
+  <p class="page-sub">Explorá los productos visualmente. Tocá una tarjeta para ver su ficha completa.</p>
+
+  <div class="filters">
+    <input type="text" id="q" placeholder="Buscar producto...">
+    <select id="fCat"><option value="">Todas las categorías</option></select>
+    <select id="fOrd">
+      <option value="nombre">Ordenar por: Nombre</option>
+      <option value="precio-asc">Precio: menor a mayor</option>
+      <option value="precio-desc">Precio: mayor a menor</option>
+      <option value="stock">Más stock</option>
+    </select>
+  </div>
+
+  <div class="gallery" id="gallery"></div>
+  <div id="empty" class="empty" style="display:none">
+    <div class="emoji">🔍</div><h3>No se encontraron productos</h3><p>Probá con otra búsqueda.</p>
+  </div>
+</main>
+
+<script src="shared.js"></script>
+<script>
+function render(){
+  const productos = DB.productos();
+  const cats = [...new Set(productos.map(p=>p.categoria))];
+  const fCat = document.getElementById('fCat');
+  const sel = fCat.value;
+  fCat.innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join('');
+  filtrar();
+}
+
+function filtrar(){
+  const q = document.getElementById('q').value.toLowerCase().trim();
+  const cat = document.getElementById('fCat').value;
+  const ord = document.getElementById('fOrd').value;
+  let lista = DB.productos().filter(p=>{
+    if (q && !(p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q))) return false;
+    if (cat && p.categoria !== cat) return false;
+    return true;
+  });
+  if (ord==='precio-asc') lista.sort((a,b)=>a.precio-b.precio);
+  if (ord==='precio-desc') lista.sort((a,b)=>b.precio-a.precio);
+  if (ord==='stock') lista.sort((a,b)=>b.stock-a.stock);
+  if (ord==='nombre') lista.sort((a,b)=>a.nombre.localeCompare(b.nombre));
+
+  const g = document.getElementById('gallery');
+  document.getElementById('empty').style.display = lista.length ? 'none':'block';
+  g.innerHTML = lista.map(p=>{
+    const e = estadoStock(p);
+    return `<div class="g-card" data-id="${p.id}">
+      <div class="g-stock-tag" style="color:${e.color}">● ${e.label}</div>
+      <div class="g-img">${p.img||'📦'}</div>
+      <div class="g-body">
+        <div class="g-cat">${p.categoria}</div>
+        <div class="g-name">${p.nombre}</div>
+        <div class="g-desc">${p.descripcion || 'Sin descripción.'}</div>
+        <div class="g-foot">
+          <div class="g-precio">${fmt$(p.precio)}</div>
+          <div class="g-pill" style="background:${e.color}22;color:${e.color}">${p.stock} u.</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  g.querySelectorAll('.g-card').forEach(c=>{
+    c.addEventListener('click', ()=>{
+      DB.setSeleccionado(+c.dataset.id);
+      location.href = 'perfil.html';
+    });
+  });
+}
+
+['q','fCat','fOrd'].forEach(i=>document.getElementById(i).addEventListener('input', filtrar));
+render();
+</script>
+</body>
+</html>

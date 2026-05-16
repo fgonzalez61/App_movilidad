@@ -1,0 +1,114 @@
+/* ===== Design tokens ===== */
+:root{
+  --navy:#0B1628; --navy-mid:#132040; --card:#15264A;
+  --white:#F8F9FC; --gray:#8494A8; --gray-light:#D0D8E4;
+  --yellow:#F5C400; --green:#1EC97E; --red:#E84040; --blue:#3A7BF7;
+  --border:rgba(255,255,255,0.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--navy); color:var(--white);
+  min-height:100vh;
+}
+
+/* ===== Nav compartida ===== */
+nav.topnav{
+  position:sticky; top:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 2rem; height:64px;
+  background:rgba(11,22,40,0.9); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.brand{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;letter-spacing:-.5px}
+.brand span{color:var(--yellow)}
+.tabs{display:flex;gap:0}
+.tabs a{
+  padding:0 1.1rem; height:64px;
+  display:flex;align-items:center;
+  font-size:.88rem;font-weight:500;color:var(--gray);
+  text-decoration:none; border-bottom:2px solid transparent;
+  transition:color .2s, border-color .2s;
+}
+.tabs a:hover{color:var(--white)}
+.tabs a.active{color:var(--yellow); border-bottom-color:var(--yellow)}
+
+.wrap{max-width:1150px;margin:0 auto;padding:2.2rem 2rem 4rem}
+
+.page-title{font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;margin-bottom:.3rem}
+.page-sub{color:var(--gray);font-size:.92rem;margin-bottom:2rem}
+
+/* ===== Botones ===== */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 18px;border:none;border-radius:9px;
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;
+  cursor:pointer;transition:transform .15s,box-shadow .15s;
+}
+.btn-primary{background:var(--yellow);color:var(--navy)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(245,196,0,.25)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--white);border:1px solid var(--border)}
+.btn-ghost:hover{background:rgba(255,255,255,.1)}
+.btn-danger{background:rgba(232,64,64,.15);color:#FF7070;border:1px solid rgba(232,64,64,.3)}
+.btn-danger:hover{background:rgba(232,64,64,.25)}
+
+/* ===== Inputs ===== */
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:1rem}
+.field label{font-size:.75rem;font-weight:600;color:var(--gray-light);letter-spacing:.5px;text-transform:uppercase}
+.field input,.field select,.field textarea{
+  background:rgba(255,255,255,.05); border:1px solid var(--border);
+  border-radius:9px; padding:10px 14px; color:var(--white);
+  font-family:'DM Sans',sans-serif; font-size:.92rem; outline:none; width:100%;
+  transition:border-color .2s, box-shadow .2s;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:rgba(245,196,0,.5); box-shadow:0 0 0 3px rgba(245,196,0,.08);
+}
+.field select option{background:var(--navy-mid)}
+.field textarea{resize:vertical;min-height:80px}
+
+/* ===== Card ===== */
+.card{
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:1.4rem 1.6rem;
+}
+
+/* ===== Toast ===== */
+.toast{
+  position:fixed;bottom:2rem;right:2rem;z-index:999;
+  background:var(--green);color:#fff;padding:12px 22px;border-radius:10px;
+  font-weight:600;font-size:.9rem;
+  transform:translateY(80px);opacity:0;
+  transition:all .35s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 8px 24px rgba(0,0,0,.3);
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.error{background:var(--red)}
+
+/* ===== Filtros ===== */
+.filters{display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.5rem}
+.filters select,.filters input{
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:8px 12px;color:var(--white);font-size:.85rem;outline:none;
+  font-family:'DM Sans',sans-serif;
+}
+.filters input{flex:1;min-width:180px}
+.filters select option{background:var(--navy-mid)}
+.filters select:focus,.filters input:focus{border-color:var(--yellow)}
+
+/* ===== Empty state ===== */
+.empty{text-align:center;padding:4rem 2rem;color:var(--gray)}
+.empty .emoji{font-size:3rem;margin-bottom:1rem}
+.empty h3{font-family:'Syne',sans-serif;color:var(--white);margin-bottom:.4rem}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--navy)}
+::-webkit-scrollbar-thumb{background:#1E3460;border-radius:3px}
+
+@media(max-width:600px){
+  nav.topnav{padding:0 1rem}
+  .tabs a{padding:0 .65rem;font-size:.78rem}
+  .wrap{padding:1.4rem 1rem 4rem}
+}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inventario · StockApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+  @media(max-width:720px){.summary{grid-template-columns:repeat(2,1fr)}}
+  .sum-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem 1.4rem;position:relative;overflow:hidden}
+  .sum-card::after{content:'';position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:var(--yellow);opacity:.05}
+  .sum-label{font-size:.75rem;color:var(--gray);text-transform:uppercase;letter-spacing:1px;margin-bottom:.4rem}
+  .sum-value{font-family:'Syne',sans-serif;font-size:1.9rem;font-weight:800}
+  .sum-value.warn{color:var(--yellow)} .sum-value.bad{color:var(--red)} .sum-value.ok{color:var(--green)}
+
+  .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  table{width:100%;border-collapse:collapse;font-size:.9rem}
+  thead{background:rgba(255,255,255,.03)}
+  th{text-align:left;padding:14px 16px;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray)}
+  td{padding:14px 16px;border-top:1px solid var(--border)}
+  tbody tr{transition:background .15s} tbody tr:hover{background:rgba(255,255,255,.03);cursor:pointer}
+  .pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600}
+  .codigo{font-family:'Syne',sans-serif;font-weight:700;color:var(--yellow)}
+  .row-actions{display:flex;gap:.4rem;justify-content:flex-end}
+  .icon-btn{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--gray);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.78rem;transition:all .2s}
+  .icon-btn:hover{color:var(--white);background:rgba(255,255,255,.1)}
+  .icon-btn.del:hover{color:var(--red);border-color:var(--red);background:rgba(232,64,64,.1)}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:200;padding:1rem}
+  .overlay.open{display:flex}
+  .modal{background:var(--navy-mid);border:1px solid var(--border);border-radius:18px;padding:1.8rem;width:100%;max-width:520px}
+  .modal h3{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:1.3rem}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr}}
+  .modal-actions{display:flex;gap:.7rem;margin-top:1.2rem}
+  .modal-actions button{flex:1}
+
+  .head-row{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <div class="brand">Stock<span>App</span></div>
+  <div class="tabs">
+    <a href="inventario.html" class="active">Inventario</a>
+    <a href="catalogo.html">Catálogo</a>
+    <a href="perfil.html">Ficha</a>
+    <a href="historial.html">Historial</a>
+  </div>
+</nav>
+
+<main class="wrap">
+  <div class="head-row">
+    <div>
+      <h1 class="page-title">Control de Stock</h1>
+      <p class="page-sub">Gestioná tu inventario, ingresos y egresos.</p>
+    </div>
+    <button class="btn btn-primary" id="btnNuevo">+ Nuevo Producto</button>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="filters">
+    <input type="text" id="q" placeholder="Buscar por nombre o código...">
+    <select id="fCat"><option value="">Todas las categorías</option></select>
+    <select id="fEst">
+      <option value="">Todos los estados</option>
+      <option value="ok">Disponible</option>
+      <option value="bajo">Stock bajo</option>
+      <option value="sin">Sin stock</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th><th>Producto</th><th>Categoría</th>
+          <th>Stock</th><th>Estado</th><th>Precio</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="emptyState" style="display:none" class="empty">
+      <div class="emoji">📦</div><h3>Sin resultados</h3><p>Probá con otro filtro o cargá un nuevo producto.</p>
+    </div>
+  </div>
+</main>
+
+<!-- Modal alta/edición -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Nuevo producto</h3>
+    <div class="grid2">
+      <div class="field"><label>Código</label><input id="f-codigo" placeholder="PRD-007"></div>
+      <div class="field"><label>Nombre</label><input id="f-nombre" placeholder="Nombre del producto"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Categoría</label><input id="f-categoria" placeholder="Electrónica"></div>
+      <div class="field"><label>Emoji / icono</label><input id="f-img" placeholder="📦" maxlength="3"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>Stock actual</label><input id="f-stock" type="number" min="0" value="0"></div>
+      <div class="field"><label>Stock mínimo</label><input id="f-min" type="number" min="0" value="5"></div>
+    </div>
+    <div class="field"><label>Precio</label><input id="f-precio" type="number" min="0" value="0"></div>
+    <div class="field"><label>Descripción</label><textarea id="f-desc" rows="2"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancelar">Cancelar</button>
+      <button class="btn btn-primary" id="btnGuardar">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script>
+let editId = null;
+
+function render(){
+  const productos = DB.productos();
+  // Resumen
+  const total = productos.length;
+  const totalStock = productos.reduce((a,p)=>a+p.stock,0);
+  const bajo = productos.filter(p=>p.stock>0 && p.stock<=p.minimo).length;
+  const sin = productos.filter(p=>p.stock===0).length;
+  document.getElementById('summary').innerHTML = `
+    <div class="sum-card"><div class="sum-label">Productos</div><div class="sum-value">${total}</div></div>
+    <div class="sum-card"><div class="sum-label">Unidades totales</div><div class="sum-value ok">${totalStock}</div></div>
+    <div class="sum-card"><div class="sum-label">Stock bajo</div><div class="sum-value warn">${bajo}</div></div>
+    <div class="sum-card"><div class="sum-label">Sin stock</div><div class="sum-value bad">${sin}</div></div>
+  `;
+  // Categorías filtro
+  const cats = [...new Set(productos.map(p=>p.categoria))];
+  const fCat = document.getElementById('fCat');
+  const sel = fCat.value;
+  fCat.innerHTML = '<option value="">Todas las categorías</option>' + cats.map(c=>`<option ${c===sel?'selected':''}>${c}</option>`).join('');
+
+  filtrar();
+}
+
+function filtrar(){
+  const q = document.getElementById('q').value.toLowerCase().trim();
+  const cat = document.getElementById('fCat').value;
+  const est = document.getElementById('fEst').value;
+  let lista = DB.productos().filter(p=>{
+    if (q && !(p.nombre.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q))) return false;
+    if (cat && p.categoria !== cat) return false;
+    if (est === 'sin' && p.stock !== 0) return false;
+    if (est === 'bajo' && !(p.stock>0 && p.stock<=p.minimo)) return false;
+    if (est === 'ok' && !(p.stock>p.minimo)) return false;
+    return true;
+  });
+
+  const tbody = document.getElementById('tbody');
+  document.getElementById('emptyState').style.display = lista.length ? 'none' : 'block';
+  tbody.innerHTML = lista.map(p=>{
+    const e = estadoStock(p);
+    return `<tr data-id="${p.id}">
+      <td class="codigo">${p.codigo}</td>
+      <td><span style="font-size:1.2rem;margin-right:6px">${p.img||'📦'}</span>${p.nombre}</td>
+      <td style="color:var(--gray)">${p.categoria}</td>
+      <td><strong>${p.stock}</strong> <span style="color:var(--gray);font-size:.78rem">/ mín ${p.minimo}</span></td>
+      <td><span class="pill" style="background:${e.color}22;color:${e.color}">${e.label}</span></td>
+      <td>${fmt$(p.precio)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn" data-act="ver" title="Ver ficha">👁</button>
+          <button class="icon-btn" data-act="edit" title="Editar">✏️</button>
+          <button class="icon-btn del" data-act="del" title="Eliminar">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  tbody.querySelectorAll('tr').forEach(tr=>{
+    const id = +tr.dataset.id;
+    tr.addEventListener('click', e=>{
+      const act = e.target.closest('button')?.dataset.act;
+      if (act === 'edit') return abrirModal(id);
+      if (act === 'del') return eliminar(id);
+      // click sobre fila o "ver" → ficha
+      DB.setSeleccionado(id);
+      location.href = 'perfil.html';
+    });
+  });
+}
+
+function abrirModal(id=null){
+  editId = id;
+  const t = document.getElementById('modalTitle');
+  if (id){
+    const p = DB.productos().find(x=>x.id===id);
+    t.textContent = 'Editar producto';
+    f_codigo.value=p.codigo; f_nombre.value=p.nombre; f_categoria.value=p.categoria;
+    f_img.value=p.img||''; f_stock.value=p.stock; f_min.value=p.minimo;
+    f_precio.value=p.precio; f_desc.value=p.descripcion||'';
+  } else {
+    t.textContent = 'Nuevo producto';
+    ['f-codigo','f-nombre','f-categoria','f-img','f-desc'].forEach(i=>document.getElementById(i).value='');
+    f_stock.value=0; f_min.value=5; f_precio.value=0;
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+const f_codigo=document.getElementById('f-codigo'), f_nombre=document.getElementById('f-nombre'),
+      f_categoria=document.getElementById('f-categoria'), f_img=document.getElementById('f-img'),
+      f_stock=document.getElementById('f-stock'), f_min=document.getElementById('f-min'),
+      f_precio=document.getElementById('f-precio'), f_desc=document.getElementById('f-desc');
+
+function cerrarModal(){ document.getElementById('overlay').classList.remove('open'); }
+
+function guardar(){
+  if (!f_codigo.value.trim() || !f_nombre.value.trim()){ toast('Código y nombre son obligatorios','error'); return; }
+  const productos = DB.productos();
+  const data = {
+    codigo: f_codigo.value.trim(),
+    nombre: f_nombre.value.trim(),
+    categoria: f_categoria.value.trim() || 'Sin categoría',
+    img: f_img.value.trim() || '📦',
+    stock: Math.max(0, +f_stock.value || 0),
+    minimo: Math.max(0, +f_min.value || 0),
+    precio: Math.max(0, +f_precio.value || 0),
+    descripcion: f_desc.value.trim()
+  };
+  if (editId){
+    const i = productos.findIndex(p=>p.id===editId);
+    const prev = productos[i];
+    const diff = data.stock - prev.stock;
+    productos[i] = {...prev, ...data};
+    if (diff !== 0){
+      DB.agregarMovimiento({ productoId: editId, tipo: diff>0?'ingreso':'egreso', cantidad: Math.abs(diff), motivo:'Ajuste manual' });
+    }
+    toast('Producto actualizado');
+  } else {
+    const nuevo = { id: Date.now(), ...data };
+    productos.push(nuevo);
+    if (data.stock>0) DB.agregarMovimiento({ productoId: nuevo.id, tipo:'ingreso', cantidad:data.stock, motivo:'Alta de producto' });
+    toast('Producto creado');
+  }
+  DB.guardarProductos(productos);
+  cerrarModal(); render();
+}
+
+function eliminar(id){
+  if (!confirm('¿Eliminar este producto?')) return;
+  DB.guardarProductos(DB.productos().filter(p=>p.id!==id));
+  toast('Producto eliminado');
+  render();
+}
+
+document.getElementById('btnNuevo').addEventListener('click', ()=>abrirModal());
+document.getElementById('btnCancelar').addEventListener('click', cerrarModal);
+document.getElementById('btnGuardar').addEventListener('click', guardar);
+document.getElementById('overlay').addEventListener('click', e=>{ if (e.target.id==='overlay') cerrarModal(); });
+['q','fCat','fEst'].forEach(i=>document.getElementById(i).addEventListener('input', filtrar));
+
+render();
+</script>
+</body>
+</html>
